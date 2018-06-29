@@ -52,7 +52,7 @@ for entry in bib_database.entries:
                 title_split = entry['title'].split(' ')
                 for i in range(len(title_split)):
                     if title_split[i].lower() == genus: # genus matched
-                        if i == len(title_split) - 1:
+                        if i == len(title_split) - 1: # only genus - at end of paper name
                             title_split[i] = '{' + title_split[i].title() + '}'
                             counts['genus_only_count'] += 1
                             continue
