@@ -1,7 +1,7 @@
 '''
 bibtex parser that fixes genus/species names and other junk
 
-usage - python bib_genus.py [infile] [outfile]
+usage - python bibtex_genus.py [infile] [outfile]
 
 first - make sure there are no instances of 'month' in the bibtex entries - this breaks the parser.
 (the bug seems to be on bibtexparser's end)
