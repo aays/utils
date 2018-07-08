@@ -30,19 +30,19 @@ with open(fname) as f:
 
 genus_names = [
     'chlamydomonas', 'drosophila',
-    'saccharomyces', 'arabidopsis', 'caenorhabditis']
+    'saccharomyces', 'arabidopsis', 'caenorhabditis', 'mus']
 
 species = [
     'reinhardtii', 'simulans', 'melanogaster',
     'persimilis', 'cerevisiae', 'paradoxus', 'pombe',
-    'thaliana', 'elegans']
+    'thaliana', 'elegans', 'musculus']
 
 counts = dict.fromkeys(['entry_count', 'genus_only_count', 'genus_species_count'], 0)
 
 for entry in bib_database.entries:
     counts['entry_count'] += 1
     entry['title'] = entry['title'].replace('\n', ' ') # remove newline chars
-    entry['title'] = re.sub('dna', '{DNA}', entry['title']) # make sure 'DNA' is in all caps
+    entry['title'] = re.sub('[Dd][Nn][Aa]', '{DNA}', entry['title']) # make sure 'DNA' is in all caps
     for genus in genus_names:
         if genus in entry['title'].lower():
             genus_index = entry['title'].lower().find(genus) # first check there isn't already a {}
