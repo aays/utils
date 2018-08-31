@@ -32,12 +32,12 @@ genus_names = [
     'chlamydomonas', 'drosophila',
     'saccharomyces', 'arabidopsis', 'caenorhabditis', 'mus']
 
-species = [
+species_names = [
     'reinhardtii', 'simulans', 'melanogaster',
     'persimilis', 'cerevisiae', 'paradoxus', 'pombe',
     'thaliana', 'elegans', 'musculus']
 
-counts = dict.fromkeys(['entry_count', 'genus_only_count', 'genus_species_count'], 0)
+counts = dict.fromkeys(['entry_count', 'genus_only_count', 'genus_species_count', 'abbr_genus_species_count'], 0)
 
 for entry in bib_database.entries:
     counts['entry_count'] += 1
@@ -56,7 +56,7 @@ for entry in bib_database.entries:
                             title_split[i] = '{' + title_split[i].title() + '}'
                             counts['genus_only_count'] += 1
                             continue
-                        elif not i == len(title_split) - 1 and title_split[i + 1] in species: # title contains genus AND species
+                        elif not i == len(title_split) - 1 and title_split[i + 1] in species_names: # title contains genus AND species
                             title_split[i] = '{' + title_split[i].title()
                             title_split[i + 1] = title_split[i + 1].lower() + '}'
                             counts['genus_species_count'] += 1
@@ -65,6 +65,20 @@ for entry in bib_database.entries:
                             counts['genus_only_count'] += 1
                     else:
                         continue
+    for species in species_names: # if genus abbreviated - 'D. melanogaster'
+        if species in entry['title'].lower():
+            species_index = entry['title'].lower().find(species) # check there isn't already a {}
+            if entry['title'][species_index + len(species)] == '}': # there's already a }
+                continue
+            else:
+                title_split = entry['title'].split(' ')
+                if not set(title_split).intersection(set(genus_names)): # genus name not present
+                    if entry['title'][species_index - 2] == '.': # genus is abbreviated
+                        for i in range(len(title_split)):
+                            if title_split[i - 1].lower().endswith('.') and title_split[i].lower() == species:
+                                title_split[i - 1] = '{' + title_split[i - 1].title()
+                                title_split[i] = title_split[i].lower() + '}'
+                                counts['abbr_genus_species_count'] += 1
 
 with open(outname, 'w') as outfile:
     bibtexparser.dump(bib_database, outfile)
@@ -73,3 +87,4 @@ print('Parsing complete.')
 print(counts['entry_count'], 'entries parsed.')
 print(counts['genus_species_count'], 'genus-species combinations corrected.')
 print(counts['genus_only_count'], 'genus-only titles corrected.')
+print(counts['abbr_genus_species_count'], 'genus-species (w/ abbreviated genus) combinations corrected.')
