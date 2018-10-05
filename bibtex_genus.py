@@ -19,6 +19,7 @@ import re
 
 fname = sys.argv[-2]
 outname = sys.argv[-1]
+max_authors = 10 # add an argparse thing for this later
 
 with open(fname) as f:
     try:
@@ -37,10 +38,31 @@ species_names = [
     'persimilis', 'cerevisiae', 'paradoxus', 'pombe',
     'thaliana', 'elegans', 'musculus', 'reinhardi']
 
-counts = dict.fromkeys(['entry_count', 'genus_only_count', 'genus_species_count', 'abbr_genus_species_count'], 0)
+counts = dict.fromkeys(['entry_count', 'genus_only_count', 'genus_species_count', 'abbr_genus_species_count', 'max_authors_count'], 0)
+
+def fix_authors(bib_entry_author, max_authors):
+    '''(str, int) -> str, bool
+    Will edit author field if author count > predefined max authors.
+    Returns modified author value and bool representing whether a change was made.
+    Bool used to increment dict keeping count if necessary.
+    '''
+    author_count = bib_entry['author'].count('and') + 1
+    if author_count < max_authors: 
+        return bib_entry['author'], False # no changes needed
+    elif author_count >= max_authors:
+        author_split = bib_entry['author'].split(' ')
+        and_locations = [i for i in range(len(author_split)) if author_split == 'and']
+        assert len(and_locations) >= max_authors
+        final_and = and_locations[:9][-1]
+        authors_trunc = ' '.join(author_split[: final_and]) + ' and others'
+        return authors_trunc, True
 
 for entry in bib_database.entries:
     counts['entry_count'] += 1
+    # fix author counts if too many
+    entry['author'], author_changes = fix_authors(entry, max_authors = max_authors)
+    counts['max_authors_count'] += author_changes # increment count if authors modified
+    # edit title for genus/species name
     entry['title'] = entry['title'].replace('\n', ' ') # remove newline chars
     entry['title'] = re.sub('[Dd][Nn][Aa]', '{DNA}', entry['title']) # make sure 'DNA' is in all caps
     for genus in genus_names:
@@ -88,3 +110,4 @@ print(counts['entry_count'], 'entries parsed.')
 print(counts['genus_species_count'], 'genus-species combinations corrected.')
 print(counts['genus_only_count'], 'genus-only titles corrected.')
 print(counts['abbr_genus_species_count'], 'genus-species (w/ abbreviated genus) combinations corrected.')
+print(counts['max_authors_count'], 'author lists exceeded max_authors =', max_authors, 'and were truncated.) 
