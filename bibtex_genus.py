@@ -35,7 +35,7 @@ genus_names = [
 species_names = [
     'reinhardtii', 'simulans', 'melanogaster',
     'persimilis', 'cerevisiae', 'paradoxus', 'pombe',
-    'thaliana', 'elegans', 'musculus']
+    'thaliana', 'elegans', 'musculus', 'reinhardi']
 
 counts = dict.fromkeys(['entry_count', 'genus_only_count', 'genus_species_count', 'abbr_genus_species_count'], 0)
 
