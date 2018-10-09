@@ -38,7 +38,6 @@ def fix_authors(bib_entry, max_authors):
         return authors_trunc, True
 
 def main(bib_database):
-    print('started')
     for entry in bib_database.entries:
         if 'author' not in entry.keys(): # books etc w/o author records
             continue
