@@ -42,7 +42,7 @@ counts = dict.fromkeys(['entry_count', 'genus_only_count', 'genus_species_count'
 for entry in bib_database.entries:
     counts['entry_count'] += 1
     entry['title'] = entry['title'].replace('\n', ' ') # remove newline chars
-    entry['title'] = re.sub('[Dd][Nn][Aa]', '{DNA}', entry['title']) # make sure 'DNA' is in all caps
+    entry['title'] = re.sub('[ {][Dd][Nn][Aa][ }]', '{DNA}', entry['title']) # make sure 'DNA' is in all caps
     for genus in genus_names:
         if genus in entry['title'].lower():
             genus_index = entry['title'].lower().find(genus) # first check there isn't already a {}
@@ -53,37 +53,37 @@ for entry in bib_database.entries:
                 for i in range(len(title_split)):
                     if title_split[i].lower() == genus: # genus matched
                         if i == len(title_split) - 1: # only genus - at end of paper name
-                            title_split[i] = '{' + title_split[i].title() + '}'
+                            title_split[i] = '\\textit{' + title_split[i].title() + '}'
+                            entry['title'] = ' '.join(title_split)
                             counts['genus_only_count'] += 1
                             continue
                         elif not i == len(title_split) - 1 and title_split[i + 1] in species_names: # title contains genus AND species
-                            title_split[i] = '{' + title_split[i].title()
+                            title_split[i] = '\\textit{' + title_split[i].title()
                             title_split[i + 1] = title_split[i + 1].lower() + '}'
+                            entry['title'] = ' '.join(title_split)
                             counts['genus_species_count'] += 1
                         else: # only genus name, not at end
-                            title_split[i] = '{' + title_split[i].title() + '}'
+                            title_split[i] = '\\textit{' + title_split[i].title() + '}'
+                            entry['title'] = ' '.join(title_split)
                             counts['genus_only_count'] += 1
                     else:
                         continue
     for species in species_names: # if genus abbreviated - 'D. melanogaster'
         if species in entry['title'].lower():
             species_index = entry['title'].lower().find(species) # check there isn't already a {}
-            if species_index + len(species) == len(entry['title']): # species at end
-                # this would break next if statement
-                # since index would be out of range if not already }'d
-                species_at_end = True
-            if not species_at_end:
-                if entry['title'][species_index + len(species)] == '}': # making absolutely sure of } presence
-                    continue
-                else:
-                    title_split = entry['title'].split(' ')
-                    if not set(title_split).intersection(set(genus_names)): # genus name not present
-                        if entry['title'][species_index - 2] == '.': # genus is abbreviated
-                            for i in range(len(title_split)):
-                                if title_split[i - 1].lower().endswith('.') and title_split[i].lower() == species:
-                                    title_split[i - 1] = '{' + title_split[i - 1].title()
-                                    title_split[i] = title_split[i].lower() + '}'
-                                    counts['abbr_genus_species_count'] += 1
+            title_split = entry['title'].split(' ')
+            for i in range(len(title_split)):
+                if title_split[i].lower() == species: # species matched
+                    if set(title_split).intersection(set(genus_names)): # genus present
+                        continue
+                    elif title_split[i - 1] not in genus_names and len(title_split[i - 1]) == 2 and title_split[i - 1].endswith('.'):
+                        title_split[i - 1] = '\\textit{' + title_split[i - 1].title() # abbr genus
+                        title_split[i] = title_split[i] + '}' # species
+                        entry['title'] = ' '.join(title_split)
+                        counts['abbr_genus_species_count'] += 1
+                        continue
+                    else: # only species name, not at end
+                        continue
 
 with open(outname, 'w') as outfile:
     bibtexparser.dump(bib_database, outfile)
